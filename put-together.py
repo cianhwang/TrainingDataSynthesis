@@ -152,15 +152,10 @@ def link_file_node(scene, base_path, output_type, format = 'OPEN_EXR', color_dep
     file_node.base_path = base_path
     file_node.format.file_format = format
     file_node.format.color_depth = color_depth
-    
     scene.node_tree.links.new(render_layers.outputs[output_type],file_node.inputs['Image'])
     
 if __name__ == '__main__':
     random.seed("0038")
-    
-    ''' clear scene '''
-    bpy.ops.object.select_all(action='SELECT')
-    bpy.ops.object.delete(use_global=False)
     
     ''' initialize scene '''
     scene = bpy.context.scene
@@ -171,46 +166,63 @@ if __name__ == '__main__':
     scene.cycles.max_bounces = 1
     scene.cycles.filter_width = 0.01 ## turn off anti-aliasing
     scene.frame_end = 240
+    
+    n_scenes = 50
+    
+    for scene_idx in range(n_scenes):
+        ''' clear scene '''
+        bpy.ops.object.select_all(action='SELECT')
+        bpy.ops.object.delete(use_global=False)
 
-    ''' add light source '''
-    lamp_data = bpy.data.lights.new(name="light", type='POINT')  
-    lamp_object = bpy.data.objects.new(name="light_obj", object_data=lamp_data)  
-    bpy.context.collection.objects.link(lamp_object)  
-    #lamp_object.location = (-3, 0, 7)
-    lamp_object.location = (4, 1, 6)
-    lamp = bpy.data.lights[lamp_data.name]
-    lamp.energy = 1000
+        ''' add light source '''
+        lamp_data = bpy.data.lights.new(name="light", type='POINT')  
+        lamp_object = bpy.data.objects.new(name="light_obj", object_data=lamp_data)  
+        bpy.context.collection.objects.link(lamp_object)  
+        #lamp_object.location = (-3, 0, 7)
+        lamp_object.location = (4, 1, 6)
+        lamp = bpy.data.lights[lamp_data.name]
+        lamp.energy = 10000
 
-    ''' set camera '''
-    cam_data = bpy.data.cameras.new(name="cam")  
-    cam_ob = bpy.data.objects.new(name="cam_obj", object_data=cam_data)  
-    bpy.context.collection.objects.link(cam_ob)  
-    #cam_ob.location = (0, 1, 12)  
-    cam_ob.location = (7, -7, 5)
-    #cam_ob.rotation_euler = (0,0,0.3)  
-    cam_ob.rotation_euler = (radians(63.6), 0, radians(46.7))
-    cam = bpy.data.cameras[cam_data.name]  
-    cam.lens = 100
-    scene.camera = cam_ob
-    
-    ''' add background cube '''
-    background = add_mesh_obj("background", 20)
-#    add_texture(background, "ShaderNodeTexChecker", {"Scale":20, 
-#                                "Color1":(0.2, 0.2, 0.0, 1)})
-    add_texture(background, "ShaderNodeTexMagic", {"Scale": 20, "Distortion": 1.5})
-    background.name = "background"
-    
-    ''' add objs '''
-    n_obj = random.randint(1, 3)
-    obj_list = [background]
-    for i in range(n_obj):
-        obj_list.append(gen_random_obj_with_texture())
+        ''' set camera '''
+        cam_data = bpy.data.cameras.new(name="cam")  
+        cam_ob = bpy.data.objects.new(name="cam_obj", object_data=cam_data)  
+        bpy.context.collection.objects.link(cam_ob)  
+        #cam_ob.location = (0, 1, 12)  
+        cam_ob.location = (7, -7, 5)
+        #cam_ob.rotation_euler = (0,0,0.3)  
+        cam_ob.rotation_euler = (radians(63.6), 0, radians(46.7))
+        cam = bpy.data.cameras[cam_data.name]  
+        cam.lens = 100
+        scene.camera = cam_ob
+        
+        ''' add background cube '''
+        background = add_mesh_obj("background", 20)
+    #    add_texture(background, "ShaderNodeTexChecker", {"Scale":20, 
+    #                                "Color1":(0.2, 0.2, 0.0, 1)})
+        add_texture(background, "ShaderNodeTexMagic", {"Scale": 20, "Distortion": 1.5})
+        background.name = "background"
+        
+        ''' add objs '''
+        n_obj = random.randint(1, 3)
+        obj_list = [background]
+        for i in range(n_obj):
+            obj_list.append(gen_random_obj_with_texture())
 
-    gen_random_animation(scene, obj_list, scene.frame_end)
-    
-#    ''' output '''
-#    link_file_node(scene, 'Users/qian/Downloads/Image', 'Image')
-#    link_file_node(scene, 'Users/qian/Downloads/Depth', 'Depth')
-#    link_file_node(scene, 'Users/qian/Downloads/Vector', 'Vector')
-    
-#    bpy.ops.render.render(animation = True)
+        gen_random_animation(scene, obj_list, scene.frame_end)
+        
+        ''' output '''
+        link_file_node(scene, 
+                    '/Users/qian/Downloads/blender_scene{:02d}/Image'.format(scene_idx), 
+                    'Image')
+        link_file_node(scene, 
+                    '/Users/qian/Downloads/blender_scene{:02d}/Depth'.format(scene_idx), 
+                    'Depth')
+        link_file_node(scene, 
+                    '/Users/qian/Downloads/blender_scene{:02d}/Vector'.format(scene_idx), 
+                    'Vector')
+        
+        bpy.ops.render.render(animation = True)
+        
+        nodes = scene.node_tree.nodes
+        for i in range(3):
+            nodes.remove(nodes[-1])
