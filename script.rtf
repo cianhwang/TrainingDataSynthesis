@@ -1,0 +1,264 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2578
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww17280\viewh13200\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs36 \cf0  bpy.ops.transform.translate(\
+translate()\
+bpy.ops.transform.translate(value=(0, 0, 0), orient_type='GLOBAL', orient_matrix=((0, 0, 0), (0, 0, 0), (0, 0, 0)), orient_matrix_type='GLOBAL', constraint_axis=(False, False, False), mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_target='CLOSEST', snap_point=(0, 0, 0), snap_align=False, snap_normal=(0, 0, 0), gpencil_strokes=False, cursor_transform=False, texture_space=False, remove_on_cancel=False, release_confirm=False, use_accurate=False, use_automerge_and_split=False)\
+Move selected items\
+>>> bpy.ops.transform.translate((-3, 0, 0))\
+Traceback (most recent call last):\
+  File "<blender_console>", line 1, in <module>\
+  File "/Applications/Blender.app/Contents/Resources/2.91/scripts/modules/bpy/ops.py", line 129, in __call__\
+    C_dict, C_exec, C_undo = _BPyOpsSubModOp._parse_args(args)\
+  File "/Applications/Blender.app/Contents/Resources/2.91/scripts/modules/bpy/ops.py", line 82, in _parse_args\
+    raise ValueError("1-3 args execution context is supported")\
+ValueError: 1-3 args execution context is supported\
+\
+>>> bpy.ops.transform.translate(value=(-3, 0, 0))\
+\{'FINISHED'\}\
+\
+>>> ob.rotation_euler=((0, 0, radians(20))\
+... )\
+>>> C.scene.active\
+Traceback (most recent call last):\
+  File "<blender_console>", line 1, in <module>\
+AttributeError: 'Scene' object has no attribute 'active'\
+\
+>>> C.scene.objects.active\
+Traceback (most recent call last):\
+  File "<blender_console>", line 1, in <module>\
+AttributeError: 'bpy_prop_collection' object has no attribute 'active'\
+\
+>>> C.scene.object\
+Traceback (most recent call last):\
+  File "<blender_console>", line 1, in <module>\
+AttributeError: 'Scene' object has no attribute 'object'\
+\
+>>> C.scene.objects\
+bpy.data.scenes['Scene'].objects\
+\
+>>> for i in C.scene.objects:\
+...     print(i)\
+...     \
+<bpy_struct, Object("Cube") at 0x7fb12f880208>\
+<bpy_struct, Object("Light") at 0x7fb12f880808>\
+<bpy_struct, Object("Camera") at 0x7fb12f87fc08>\
+<bpy_struct, Object("Plane") at 0x7fb12c41a008>\
+\
+>>> C.scene.objects.active\
+Traceback (most recent call last):\
+  File "<blender_console>", line 1, in <module>\
+AttributeError: 'bpy_prop_collection' object has no attribute 'active'\
+\
+>>> C.scene.view_layer.objects.active\
+Traceback (most recent call last):\
+  File "<blender_console>", line 1, in <module>\
+AttributeError: 'Scene' object has no attribute 'view_layer'\
+\
+>>> C.view_layer.objects.active\
+bpy.data.objects['Plane']\
+>>> C.view_layer.objects.active = 1\
+Traceback (most recent call last):\
+  File "<blender_console>", line 1, in <module>\
+TypeError: BPy_PropertyRNA - Attribute (setattr): LayerObjects.active expected a Object type, not int\
+\
+>>> C.view_layer.objects.active = "cube"\
+Traceback (most recent call last):\
+  File "<blender_console>", line 1, in <module>\
+TypeError: BPy_PropertyRNA - Attribute (setattr): LayerObjects.active expected a Object type, not str\
+\
+>>> C.view_layer.objects.active = None\
+>>> C.view_layer.objects.active\
+>>> C.view_layer.objects.active\
+bpy.data.objects['Cube']\
+\
+>>> C.view_layer.objects\
+bpy.data.scenes['Scene'].view_layers["View Layer"].objects\
+\
+>>> for i in C.view_layer.objects:\
+...     print(i)\
+...     \
+<bpy_struct, Object("Cube") at 0x7fb12f880208>\
+<bpy_struct, Object("Light") at 0x7fb12f880808>\
+<bpy_struct, Object("Camera") at 0x7fb12f87fc08>\
+<bpy_struct, Object("Plane") at 0x7fb12c41a008>\
+\
+>>> D.objects\
+<bpy_collection[4], BlendDataObjects>\
+\
+>>> for i in D.objects:\
+...     print(i)\
+...     \
+<bpy_struct, Object("Camera") at 0x7fb12f87fc08>\
+<bpy_struct, Object("Cube") at 0x7fb12f880208>\
+<bpy_struct, Object("Light") at 0x7fb12f880808>\
+<bpy_struct, Object("Plane") at 0x7fb12c41a008>\
+\
+>>> C.view_layer.objects.active = None\
+>>> C.view_layer.objects.active = D.objects["Cube"]\
+>>> bpy.context.scene.render.engine = 'CYCLES'\
+>>> bpy.context.view_layer.active\
+Traceback (most recent call last):\
+  File "<blender_console>", line 1, in <module>\
+AttributeError: 'ViewLayer' object has no attribute 'active'\
+\
+>>> C.view_layer.objects.active\
+bpy.data.objects['Plane']\
+\
+>>> C.view_layer.objects.active.material\
+Traceback (most recent call last):\
+  File "<blender_console>", line 1, in <module>\
+AttributeError: 'Object' object has no attribute 'material'\
+\
+>>> C.view_layer.objects.active.material_slots\
+bpy.data.objects['Plane'].material_slots\
+\
+>>> C.view_layer.objects.active.material_slots[0]\
+bpy.data.objects['Plane'].material_slots[0]\
+\
+>>> for i in C.view_layer.objects.active.material_slots[0]:\
+...     print(i)\
+...     \
+Traceback (most recent call last):\
+  File "<blender_console>", line 1, in <module>\
+TypeError: 'MaterialSlot' object is not iterable\
+\
+>>> for i in C.view_layer.objects.active.material_slots:\
+...     print(i)\
+...     \
+<bpy_struct, MaterialSlot("Material.001") at 0x600002858288>\
+\
+>>> C.view_layer.objects.active.material_slots[0].material\
+bpy.data.materials['Material.001']\
+\
+>>> material = C.view_layer.objects.active.material_slots[0].material\
+>>> material.\
+             alpha_threshold\
+             animation_data\
+             animation_data_clear(\
+             animation_data_create(\
+             as_pointer(\
+             bl_rna\
+             bl_rna_get_subclass(\
+             bl_rna_get_subclass_py(\
+             blend_method\
+             copy(\
+             cycles\
+             diffuse_color\
+             driver_add(\
+             driver_remove(\
+             evaluated_get(\
+             get(\
+             grease_pencil\
+             id_data\
+             is_embedded_data\
+             is_evaluated\
+             is_grease_pencil\
+             is_library_indirect\
+             is_property_hidden(\
+             is_property_overridable_library(\
+             is_property_readonly(\
+             is_property_set(\
+             items(\
+             keyframe_delete(\
+             keyframe_insert(\
+             keys(\
+             library\
+             line_color\
+             line_priority\
+             make_local(\
+             metallic\
+             name\
+             name_full\
+             node_tree\
+             original\
+             override_create(\
+             override_library\
+             paint_active_slot\
+             paint_clone_slot\
+             paint_clone_slot\
+             pass_index\
+             path_from_id(\
+             path_resolve(\
+             pop(\
+             preview\
+             preview_render_type\
+             property_overridable_library_set(\
+             property_unset(\
+             refraction_depth\
+             rna_type\
+             roughness\
+             shadow_method\
+             show_transparent_back\
+             specular_color\
+             specular_intensity\
+             tag\
+             texture_paint_images\
+             texture_paint_slots\
+             type_recast(\
+             update_tag(\
+             use_backface_culling\
+             use_fake_user\
+             use_nodes\
+             use_preview_world\
+             use_screen_refraction\
+             use_sss_translucency\
+             user_clear(\
+             user_of_id(\
+             user_remap(\
+             users\
+             values(\
+>>> material.node_tree.nodes\
+bpy.data.materials['Material.001'].node_tree.nodes\
+\
+>>> nodes = material.node_tree.nodes\
+>>> for i in nodes:\
+...     print(i)\
+...     \
+<bpy_struct, ShaderNodeBsdfPrincipled("Principled BSDF") at 0x7fb12e9359a8>\
+<bpy_struct, ShaderNodeOutputMaterial("Material Output") at 0x7fb135022c88>\
+<bpy_struct, ShaderNodeTexMagic("Magic Texture") at 0x7fb12eb085b8>\
+\
+>>> nodes = material.node_tree.nodes\
+>>> for i in nodes:\
+...     print(i)\
+...     \
+<bpy_struct, ShaderNodeBsdfPrincipled("Principled BSDF") at 0x7fb12e9359a8>\
+<bpy_struct, ShaderNodeOutputMaterial("Material Output") at 0x7fb135022c88>\
+<bpy_struct, ShaderNodeRGB("RGB") at 0x7fb134374258>\
+\
+>>> principled = next(n for n in nodes if n.type == 'Principled BSDF')\
+Traceback (most recent call last):\
+  File "<blender_console>", line 1, in <module>\
+StopIteration\
+\
+>>> principled = next(n for n in nodes if n.type == 'BSDF_PRINCIPLED')\
+>>> principled\
+bpy.data.materials['Material.001'].node_tree.nodes["Principled BSDF"]\
+\
+>>> principled.type\
+'BSDF_PRINCIPLED'\
+\
+>>> base_color = principled.input\
+                                 _template(\
+                                 s\
+>>> base_color = principled.inputs['Base Color']\
+>>> base_color\
+bpy.data.materials['Material.001'].node_tree.nodes["Principled BSDF"].inputs[0]\
+\
+>>> value = base_color.default_value\
+>>> value\
+bpy.data.materials['Material.001'].node_tree.nodes["Principled BSDF"].inputs[0].default_value\
+\
+>>> nodes = material.node_tree.nodes\
+>>> print(i for i in nodes)\
+<generator object <genexpr> at 0x133cfead0>\
+\
+>>> print([i for i in nodes])\
+[bpy.data.materials['Material.001'].node_tree.nodes["Principled BSDF"], bpy.data.materials['Material.001'].node_tree.nodes["Material Output"]]\
+\
+>>> D.materials}
