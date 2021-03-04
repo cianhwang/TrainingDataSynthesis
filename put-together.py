@@ -39,6 +39,10 @@ def add_texture(obj, type, params = None):
     mat.use_nodes = True
     matnodes = mat.node_tree.nodes
     tex = matnodes.new(type)
+    if type == "ShaderNodeTexVoronoi":
+        tex.voronoi_dimensions = '4D'
+    if type == "ShaderNodeTexMagic":
+        tex.turbulence_depth = random.randint(1, 5)
     if params is not None:
         for name in params:
             tex.inputs[name].default_value = params[name]
@@ -51,6 +55,26 @@ def add_texture(obj, type, params = None):
     obj.data.materials.append(mat)
     return mat, tex
 
+def tex_random_params(type):
+    params = {}
+    if type == "ShaderNodeTexVoronoi":
+        params['Scale'] = random.randint(4, 6)
+        params['W'] = random.randint(0, 10)
+    elif type == "ShaderNodeTexMagic":
+        params['Scale'] = random.randint(4, 6)
+        params['Distortion'] = 1 + random.random()
+    elif type == "ShaderNodeTexBrick":
+        params['Scale'] = random.randint(2, 4)
+        params['Color1'] = (random.random(), random.random(), random.random(), 1)
+        params['Color2'] = (random.random(), random.random(), random.random(), 1)
+    elif type == "ShaderNodeTexChecker":
+        params['Scale'] = random.randint(6, 10)
+        params['Color1'] = (random.random(), random.random(), random.random(), 1)
+        params['Color2'] = (random.random(), random.random(), random.random(), 1)
+    else:
+        raise NotImplementedError
+    return params
+
 def gen_random_obj_with_texture():
     mesh_obj_list = ["cube", "uv_sphere", "cone"]
     obj = add_mesh_obj(random.choice(mesh_obj_list))
@@ -58,7 +82,8 @@ def gen_random_obj_with_texture():
                     "ShaderNodeTexMagic",
                     "ShaderNodeTexBrick",
                     "ShaderNodeTexChecker"]
-    mat, tex = add_texture(obj, random.choice(tex_list))
+    type = random.choice(tex_list)
+    mat, tex = add_texture(obj, type, tex_random_params(type))
     return obj
 
 def set_animation(obj, trans_params, is_background = False):
@@ -83,7 +108,7 @@ def get_rand_trans():
                 0.5 + random.random())
     return (location, rotation, scale)
                 
-def gen_random_animation(scene, obj_list, n_frames = 60):
+def gen_random_animation(scene, obj_list, n_frames = 240, patition_len = 7):
     '''
     scene: bpy.context.scene
     obj_list: contains a list of mesh objects
@@ -92,16 +117,16 @@ def gen_random_animation(scene, obj_list, n_frames = 60):
     gen random partition inside n_frames, 
     e.g. n_frames = 60, partition = [0, 10, 21, 33, 45, 52, 60]
     '''
+    interval = int(n_frames/(patition_len - 1))
     for obj in obj_list:
         if obj.name != "background":
-    #        partition = get_rand_partition(n_frames) ## NOT IMPLEMENTED YET
-            partition = [10*i for i in range(7)]
+            partition = [interval*i for i in range(patition_len)] ## equally distributed
             for curr_time in partition:
                 scene.frame_set(curr_time)
                 trans_params = get_rand_trans()
                 set_animation(obj, trans_params)
         else:
-            partition = [10*i for i in range(7)]
+            partition = [interval*i for i in range(patition_len)]
             for curr_time in partition:
                 scene.frame_set(curr_time)
                 trans_params = get_rand_trans()
@@ -131,7 +156,7 @@ def link_file_node(scene, base_path, output_type, format = 'OPEN_EXR', color_dep
     scene.node_tree.links.new(render_layers.outputs[output_type],file_node.inputs['Image'])
     
 if __name__ == '__main__':
-    random.seed("qian038")
+    random.seed("0038")
     
     ''' clear scene '''
     bpy.ops.object.select_all(action='SELECT')
@@ -145,7 +170,7 @@ if __name__ == '__main__':
     scene.cycles.samples = 4096
     scene.cycles.max_bounces = 1
     scene.cycles.filter_width = 0.01 ## turn off anti-aliasing
-    scene.frame_end = 60
+    scene.frame_end = 240
 
     ''' add light source '''
     lamp_data = bpy.data.lights.new(name="light", type='POINT')  
@@ -154,7 +179,7 @@ if __name__ == '__main__':
     #lamp_object.location = (-3, 0, 7)
     lamp_object.location = (4, 1, 6)
     lamp = bpy.data.lights[lamp_data.name]
-    lamp.energy = 10000
+    lamp.energy = 1000
 
     ''' set camera '''
     cam_data = bpy.data.cameras.new(name="cam")  
@@ -170,20 +195,22 @@ if __name__ == '__main__':
     
     ''' add background cube '''
     background = add_mesh_obj("background", 20)
-    add_texture(background, "ShaderNodeTexChecker", {"Scale":20, 
-                                "Color1":(0.2, 0.2, 0.0, 1)})
+#    add_texture(background, "ShaderNodeTexChecker", {"Scale":20, 
+#                                "Color1":(0.2, 0.2, 0.0, 1)})
+    add_texture(background, "ShaderNodeTexMagic", {"Scale": 20, "Distortion": 1.5})
     background.name = "background"
     
-    ''' test add obj '''
-    obj1 = gen_random_obj_with_texture()
-    obj2 = gen_random_obj_with_texture()  
+    ''' add objs '''
+    n_obj = random.randint(1, 3)
+    obj_list = [background]
+    for i in range(n_obj):
+        obj_list.append(gen_random_obj_with_texture())
+
+    gen_random_animation(scene, obj_list, scene.frame_end)
     
-    obj_list = [background, obj1, obj2]
-    gen_random_animation(scene, obj_list)
-    
-    ''' output '''
-    link_file_node(scene, 'Users/qian/Downloads/Image', 'Image')
-    link_file_node(scene, 'Users/qian/Downloads/Depth', 'Depth')
-    link_file_node(scene, 'Users/qian/Downloads/Vector', 'Vector')
+#    ''' output '''
+#    link_file_node(scene, 'Users/qian/Downloads/Image', 'Image')
+#    link_file_node(scene, 'Users/qian/Downloads/Depth', 'Depth')
+#    link_file_node(scene, 'Users/qian/Downloads/Vector', 'Vector')
     
 #    bpy.ops.render.render(animation = True)
