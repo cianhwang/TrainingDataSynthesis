@@ -27,6 +27,21 @@ def add_texture(obj, type, params = None):
     obj.data.materials.append(mat)
     return mat, tex
 
+def make_uneven_surface(obj):
+    mat = bpy.data.materials.new("mat_" + str(obj.name))
+    mat.use_nodes = True
+    matnodes = mat.node_tree.nodes
+    dispnode = matnodes.new("ShaderNodeDisplacement")
+    disp = matnodes['Material Output'].inputs['Displacement']
+    mat.node_tree.links.new(disp, dispnode.outputs['Displacement'])
+    
+    ## ShaderNodeTexVoronoi["Distance"]
+    ## ShaderNodeTexMagic["Fac"]
+    ## ShaderNodeTexMusgrave[0]
+    tex = matnodes.new("ShaderNodeTexMusgrave")
+    mat.node_tree.links.new(tex.outputs[0], dispnode.inputs['Height'])
+    obj.data.materials.append(mat)
+
 class BrickTexture:
     def __init__(self):
         self.name = "ShaderNodeTexBrick"
@@ -57,5 +72,7 @@ class VoronoiTexture:
 if __name__ == '__main__':
     obj = bpy.context.object
     obj.data.materials.clear()
-    ### ShaderNodeTexBrick: params
-    add_texture(obj, "ShaderNodeTexMagic")
+#    ### ShaderNodeTexBrick: params
+#    add_texture(obj, "ShaderNodeTexMagic")
+    make_uneven_surface(obj)
+    

@@ -4,7 +4,13 @@ import random
 from math import radians
 import math
 
-def add_mesh_obj(type, size = None):
+def add_obj_modifier(obj):
+    subsurf_mod = obj.modifiers.new(name = "Subdivision",type='SUBSURF')
+    subsurf_mod.subdivision_type = 'SIMPLE'
+    subsurf_mod.show_only_control_edges = False
+    subsurf_mod.levels = 2
+
+def add_mesh_obj(type, size = None, is_modifier = True):
     '''
     type: background(wrapper cube), cube, cone, uv_sphere
     size:
@@ -22,7 +28,11 @@ def add_mesh_obj(type, size = None):
         bpy.ops.mesh.primitive_cone_add()
     else:
         raise NotImplementedError
-    return bpy.context.object
+        
+    obj = bpy.context.object
+    if is_modifier:
+        add_obj_modifier(obj)
+    return obj
 
 def add_texture(obj, type, params = None):
     '''
@@ -55,6 +65,34 @@ def add_texture(obj, type, params = None):
     obj.data.materials.append(mat)
     return mat, tex
 
+def make_uneven_surface(obj, mat, type = "ShaderNodeTexMusgrave", params = None, 
+                        disp_method = "BOTH"):
+#    mat = bpy.data.materials.new("mat_" + str(obj.name))
+#    mat.use_nodes = True
+    matnodes = mat.node_tree.nodes
+    dispnode = matnodes.new("ShaderNodeDisplacement")
+    if disp_method == "BOTH":
+        dispnode.inputs["Scale"].default_value = 0.3
+    disp = matnodes['Material Output'].inputs['Displacement']
+    mat.node_tree.links.new(disp, dispnode.outputs['Displacement'])
+    
+    ## ShaderNodeTexNoise["Fac"]
+    ## ShaderNodeTexMusgrave[0]
+    if type != "ShaderNodeTexMusgrave":
+        raise NotImplementedError
+    tex = matnodes.new(type)
+    tex.musgrave_dimensions = '4D'
+    if params is not None:
+        for name in params:
+            tex.inputs[name].default_value = params[name]
+    mat.node_tree.links.new(tex.outputs[0], dispnode.inputs['Height'])
+    
+    coord = matnodes.new("ShaderNodeTexCoord")
+    mat.node_tree.links.new(coord.outputs['Object'], tex.inputs['Vector'])
+    
+    mat.cycles.displacement_method = disp_method
+#    obj.data.materials.append(mat)
+
 def tex_random_params(type):
     params = {}
     if type == "ShaderNodeTexVoronoi":
@@ -75,6 +113,16 @@ def tex_random_params(type):
         raise NotImplementedError
     return params
 
+def surface_tex_random_params(type = "ShaderNodeTexMusgrave"):
+    params = {}
+    if type == "ShaderNodeTexMusgrave":
+        params['W'] = random.randint(0, 10)
+        params['Scale'] = random.randint(2, 6)
+        params['Detail'] = 1 + 2 * random.random()
+    else:
+        raise NotImplementedError
+    return params
+
 def gen_random_obj_with_texture():
     mesh_obj_list = ["cube", "uv_sphere", "cone"]
     obj = add_mesh_obj(random.choice(mesh_obj_list))
@@ -84,6 +132,7 @@ def gen_random_obj_with_texture():
                     "ShaderNodeTexChecker"]
     type = random.choice(tex_list)
     mat, tex = add_texture(obj, type, tex_random_params(type))
+    make_uneven_surface(obj, mat, params = surface_tex_random_params())
     return obj
 
 def set_animation(obj, trans_params, is_background = False):
@@ -155,7 +204,7 @@ def link_file_node(scene, base_path, output_type, format = 'OPEN_EXR', color_dep
     scene.node_tree.links.new(render_layers.outputs[output_type],file_node.inputs['Image'])
     
 if __name__ == '__main__':
-    random.seed("0038")
+    random.seed("qian038")
     
     ''' initialize scene '''
     scene = bpy.context.scene
@@ -164,10 +213,10 @@ if __name__ == '__main__':
     scene.render.resolution_y = 64
     scene.cycles.samples = 4096
     scene.cycles.max_bounces = 1
-    scene.cycles.filter_width = 0.01 ## turn off anti-aliasing
+#    scene.cycles.filter_width = 0.01 ## turn off anti-aliasing
     scene.frame_end = 240
     
-    n_scenes = 50
+    n_scenes = 1
     
     for scene_idx in range(n_scenes):
         ''' clear scene '''
@@ -199,7 +248,8 @@ if __name__ == '__main__':
         background = add_mesh_obj("background", 20)
     #    add_texture(background, "ShaderNodeTexChecker", {"Scale":20, 
     #                                "Color1":(0.2, 0.2, 0.0, 1)})
-        add_texture(background, "ShaderNodeTexMagic", {"Scale": 20, "Distortion": 1.5})
+        mat, _ = add_texture(background, "ShaderNodeTexMagic", {"Scale": 20, "Distortion": 1.5})
+        make_uneven_surface(background, mat, params = {"Scale": 1.0}, disp_method='BUMP')
         background.name = "background"
         
         ''' add objs '''
@@ -210,19 +260,19 @@ if __name__ == '__main__':
 
         gen_random_animation(scene, obj_list, scene.frame_end)
         
-        ''' output '''
-        link_file_node(scene, 
-                    '/Users/qian/Downloads/blender_scene{:02d}/Image'.format(scene_idx), 
-                    'Image')
-        link_file_node(scene, 
-                    '/Users/qian/Downloads/blender_scene{:02d}/Depth'.format(scene_idx), 
-                    'Depth')
-        link_file_node(scene, 
-                    '/Users/qian/Downloads/blender_scene{:02d}/Vector'.format(scene_idx), 
-                    'Vector')
-        
-        bpy.ops.render.render(animation = True)
-        
-        nodes = scene.node_tree.nodes
-        for i in range(3):
-            nodes.remove(nodes[-1])
+#        ''' output '''
+#        link_file_node(scene, 
+#                    '/Users/qian/Downloads/blender_scene{:02d}/Image'.format(scene_idx), 
+#                    'Image')
+#        link_file_node(scene, 
+#                    '/Users/qian/Downloads/blender_scene{:02d}/Depth'.format(scene_idx), 
+#                    'Depth')
+#        link_file_node(scene, 
+#                    '/Users/qian/Downloads/blender_scene{:02d}/Vector'.format(scene_idx), 
+#                    'Vector')
+#        
+#        bpy.ops.render.render(animation = True)
+#        
+#        nodes = scene.node_tree.nodes
+#        for i in range(3):
+#            nodes.remove(nodes[-1])
