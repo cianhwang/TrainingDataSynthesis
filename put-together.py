@@ -209,6 +209,7 @@ if __name__ == '__main__':
     ''' initialize scene '''
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
+    scene.cycles.device = 'GPU'
     scene.render.resolution_x = 64
     scene.render.resolution_y = 64
     scene.cycles.samples = 4096
@@ -260,19 +261,19 @@ if __name__ == '__main__':
 
         gen_random_animation(scene, obj_list, scene.frame_end)
         
-#        ''' output '''
-#        link_file_node(scene, 
-#                    '/Users/qian/Downloads/blender_scene{:02d}/Image'.format(scene_idx), 
-#                    'Image')
-#        link_file_node(scene, 
-#                    '/Users/qian/Downloads/blender_scene{:02d}/Depth'.format(scene_idx), 
-#                    'Depth')
-#        link_file_node(scene, 
-#                    '/Users/qian/Downloads/blender_scene{:02d}/Vector'.format(scene_idx), 
-#                    'Vector')
-#        
-#        bpy.ops.render.render(animation = True)
-#        
-#        nodes = scene.node_tree.nodes
-#        for i in range(3):
-#            nodes.remove(nodes[-1])
+        ''' output '''
+        link_file_node(scene, 
+                    '/home/qian/Downloads/blender_collection/scene{:02d}/Image'.format(scene_idx), 
+                    'Image')
+        link_file_node(scene, 
+                    '/home/qian/Downloads/blender_collection/scene{:02d}/Depth'.format(scene_idx), 
+                    'Depth')
+        link_file_node(scene, 
+                    '/home/qian/Downloads/blender_collection/scene{:02d}/Vector'.format(scene_idx), 
+                    'Vector')
+        
+        bpy.ops.render.render(animation = True)
+        
+        nodes = scene.node_tree.nodes
+        for i in range(3):
+            nodes.remove(nodes[-1])
