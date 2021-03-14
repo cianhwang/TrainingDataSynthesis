@@ -78,10 +78,13 @@ def make_uneven_surface(obj, mat, type = "ShaderNodeTexMusgrave", params = None,
     
     ## ShaderNodeTexNoise["Fac"]
     ## ShaderNodeTexMusgrave[0]
-    if type != "ShaderNodeTexMusgrave":
-        raise NotImplementedError
     tex = matnodes.new(type)
-    tex.musgrave_dimensions = '4D'
+    if type == "ShaderNodeTexMusgrave":
+        tex.musgrave_dimensions = '4D'
+    elif type == "ShaderNodeTexNoise":
+        tex.noise_dimensions = '4D'
+    else
+        raise NotImplementedError
     if params is not None:
         for name in params:
             tex.inputs[name].default_value = params[name]
@@ -115,7 +118,7 @@ def tex_random_params(type):
 
 def surface_tex_random_params(type = "ShaderNodeTexMusgrave"):
     params = {}
-    if type == "ShaderNodeTexMusgrave":
+    if type == "ShaderNodeTexMusgrave" or type == "ShaderNodeTexNoise":
         params['W'] = random.randint(0, 10)
         params['Scale'] = random.randint(2, 6)
         params['Detail'] = 1 + 2 * random.random()
@@ -132,7 +135,10 @@ def gen_random_obj_with_texture():
                     "ShaderNodeTexChecker"]
     type = random.choice(tex_list)
     mat, tex = add_texture(obj, type, tex_random_params(type))
-    make_uneven_surface(obj, mat, params = surface_tex_random_params())
+    surface_list = ["ShaderNodeTexMusgrave", "ShaderNodeTexNoise"]
+    surface_type = random.choice(surface_list)
+    make_uneven_surface(obj, mat, 
+                    params = surface_tex_random_params(surface_type))
     return obj
 
 def set_animation(obj, trans_params, is_background = False):
@@ -210,8 +216,8 @@ if __name__ == '__main__':
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     #scene.cycles.device = 'GPU'
-    scene.render.resolution_x = 64
-    scene.render.resolution_y = 64
+    scene.render.resolution_x = 4096
+    scene.render.resolution_y = 4096
     scene.cycles.samples = 4096
     scene.cycles.max_bounces = 1
     scene.cycles.filter_width = 0.7 ## turn off anti-aliasing
@@ -261,7 +267,7 @@ if __name__ == '__main__':
         background.name = "background"
         
         ''' add objs '''
-        n_obj = 20#random.randint(1, 3)
+        n_obj = 20 #random.randint(1, 3)
         obj_list = [background]
         for i in range(n_obj):
             obj_list.append(gen_random_obj_with_texture())
