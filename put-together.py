@@ -209,13 +209,20 @@ if __name__ == '__main__':
     ''' initialize scene '''
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
-    scene.cycles.device = 'GPU'
+    #scene.cycles.device = 'GPU'
     scene.render.resolution_x = 64
     scene.render.resolution_y = 64
     scene.cycles.samples = 4096
     scene.cycles.max_bounces = 1
-#    scene.cycles.filter_width = 0.01 ## turn off anti-aliasing
-    scene.frame_end = 240
+    scene.cycles.filter_width = 0.7 ## turn off anti-aliasing
+    scene.frame_end = 6
+#    
+#    scene.render.use_border = True
+#    scene.render.use_crop_to_border = True
+#    scene.render.border_min_x = 900/scene.render.resolution_x
+#    scene.render.border_max_x = 964/scene.render.resolution_x
+#    scene.render.border_min_y = 500/scene.render.resolution_y
+#    scene.render.border_max_y = 564/scene.render.resolution_y
     
     n_scenes = 1
     
@@ -254,26 +261,26 @@ if __name__ == '__main__':
         background.name = "background"
         
         ''' add objs '''
-        n_obj = random.randint(1, 3)
+        n_obj = 20#random.randint(1, 3)
         obj_list = [background]
         for i in range(n_obj):
             obj_list.append(gen_random_obj_with_texture())
 
         gen_random_animation(scene, obj_list, scene.frame_end)
         
-        ''' output '''
-        link_file_node(scene, 
-                    '/home/qian/Downloads/blender_collection/scene{:02d}/Image'.format(scene_idx), 
-                    'Image')
-        link_file_node(scene, 
-                    '/home/qian/Downloads/blender_collection/scene{:02d}/Depth'.format(scene_idx), 
-                    'Depth')
-        link_file_node(scene, 
-                    '/home/qian/Downloads/blender_collection/scene{:02d}/Vector'.format(scene_idx), 
-                    'Vector')
-        
-        bpy.ops.render.render(animation = True)
-        
-        nodes = scene.node_tree.nodes
-        for i in range(3):
-            nodes.remove(nodes[-1])
+#        ''' output '''
+#        link_file_node(scene, 
+#                    '/Users/qian/Downloads/blender_collection/scene{:02d}/Image'.format(scene_idx), 
+#                    'Image')
+#        link_file_node(scene, 
+#                    '/Users/qian/Downloads/blender_collection/scene{:02d}/Depth'.format(scene_idx), 
+#                    'Depth')
+#        link_file_node(scene, 
+#                    '/Users/qian/Downloads/blender_collection/scene{:02d}/Vector'.format(scene_idx), 
+#                    'Vector')
+#        
+#        bpy.ops.render.render(animation = True)
+#        
+#        nodes = scene.node_tree.nodes
+#        for i in range(3):
+#            nodes.remove(nodes[-1])
