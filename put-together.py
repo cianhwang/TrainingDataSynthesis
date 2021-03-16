@@ -76,9 +76,9 @@ def gen_random_animation(obj_list, patition_len = 7):
                 set_animation(obj, trans_params, True)
     
 if __name__ == '__main__':
-#    random.seed("qian038")
+    random.seed("qian038")
     ''' initialize scene '''
-    init_scene(n_frames = 6, render_region = True, 
+    init_scene(n_frames = 240, render_region = True, 
                 render_params = (2016, 2080, 2016, 2080))
     
     n_scenes = 1
@@ -94,25 +94,17 @@ if __name__ == '__main__':
         add_camera((7, -7, 5), (radians(63.6), 0, radians(46.7)))
         
         ''' add background cube '''
-#        background = add_mesh_obj("cube", {"size":20})
-#        add_modifier(background, 4)
-#        mat = add_material(background)
-#        
-#        add_texture(background, mat, random.choice(tex_list), 
-#                    {"Scale": 20})
-#        displace_surface(background, mat, type = random.choice(surface_list), 
-#                        params = {"Scale": 1.0}, disp_method='BUMP')
         background = gen_random_obj_with_texture("cube")
         background.dimensions = (20, 20, 20)
         background.name = "background"
         
         ''' add objs '''
-        n_obj = random.randint(10, 20)
+        n_obj = random.randint(4, 6)
         obj_list = [background]
         for i in range(n_obj):
             obj_list.append(gen_random_obj_with_texture())
 
-        gen_random_animation(obj_list)
+        gen_random_animation(obj_list, 25)
         
         ''' output '''
         path = '/Users/qian/Downloads/blender_collection/scene{:02d}/'.format(scene_idx)

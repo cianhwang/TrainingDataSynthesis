@@ -6,12 +6,16 @@ def init_scene(res = 4096, n_frames = 240, use_gpu = False, render_region=True, 
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     scene.cycles.device = 'GPU' if use_gpu else 'CPU'
+    scene.render.tile_x = 64 if use_gpu else 8
+    scene.render.tile_y = 64 if use_gpu else 8
+    scene.cycles.caustics_reflective = False
+    scene.cycles.caustics_refractive = False
     scene.render.resolution_x = res
     scene.render.resolution_y = res
-    scene.cycles.samples = 4096
+    scene.cycles.samples = 20480
     scene.cycles.preview_samples = 1
     scene.cycles.max_bounces = 1
-    scene.cycles.filter_width = 0.7 ## turn off anti-aliasing
+#    scene.cycles.filter_width = 0.7 ## turn off anti-aliasing
     scene.frame_end = n_frames
     if render_region:
         scene.render.use_border = True
