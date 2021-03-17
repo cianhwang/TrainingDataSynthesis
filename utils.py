@@ -2,7 +2,7 @@ import bpy
 from math import radians
 import random
 
-def init_scene(res = 4096, n_frames = 240, use_gpu = False, render_region=True, render_params = None):
+def init_scene(res = (3840, 2160), n_frames = 240, n_samples = 4096, use_gpu = False, render_region=True, render_params = None):
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     scene.cycles.device = 'GPU' if use_gpu else 'CPU'
@@ -10,12 +10,17 @@ def init_scene(res = 4096, n_frames = 240, use_gpu = False, render_region=True, 
     scene.render.tile_y = 64 if use_gpu else 8
     scene.cycles.caustics_reflective = False
     scene.cycles.caustics_refractive = False
-    scene.render.resolution_x = res
-    scene.render.resolution_y = res
-    scene.cycles.samples = 20480
+    if isinstance(res, int):
+        scene.render.resolution_x = res
+        scene.render.resolution_y = res
+    else:
+        scene.render.resolution_x = res[0]
+        scene.render.resolution_y = res[1]
+    scene.cycles.samples = n_samples
     scene.cycles.preview_samples = 1
     scene.cycles.max_bounces = 1
-#    scene.cycles.filter_width = 0.7 ## turn off anti-aliasing
+    scene.cycles.sample_clamp_indirect = 0
+    scene.cycles.filter_width = 1.5 ## turn off anti-aliasing
     scene.frame_end = n_frames
     if render_region:
         scene.render.use_border = True
@@ -25,6 +30,8 @@ def init_scene(res = 4096, n_frames = 240, use_gpu = False, render_region=True, 
         scene.render.border_max_x = x2/scene.render.resolution_x
         scene.render.border_min_y = y1/scene.render.resolution_y
         scene.render.border_max_y = y2/scene.render.resolution_y
+    else:
+        scene.render.use_border = False
     
 def clear_scene(clear_mesh_only = False):
     data = bpy.data

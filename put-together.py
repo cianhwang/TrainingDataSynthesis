@@ -78,8 +78,8 @@ def gen_random_animation(obj_list, patition_len = 7):
 if __name__ == '__main__':
     random.seed("qian038")
     ''' initialize scene '''
-    init_scene(n_frames = 240, render_region = True, 
-                render_params = (2016, 2080, 2016, 2080))
+    init_scene(res = (3840, 2160), n_frames = 240, n_samples = 4096, render_region = True, 
+                render_params = (1920 - 32, 1920 + 32, 1080 - 32, 1080 + 32))
     
     n_scenes = 1
     
@@ -107,10 +107,10 @@ if __name__ == '__main__':
         gen_random_animation(obj_list, 25)
         
         ''' output '''
-        path = '/Users/qian/Downloads/blender_collection/scene{:02d}/'.format(scene_idx)
-        link_file_node(path + 'Image', 'Image')
-        link_file_node(path + 'Depth', 'Depth')
-        link_file_node(path + 'Vector', 'Vector')
-        
-        bpy.ops.render.render(animation = True)
-        clear_output_nodes()
+#        path = '/Users/qian/Downloads/blender_collection/scene{:02d}/'.format(scene_idx)
+#        link_file_node(path + 'Image', 'Image')
+#        link_file_node(path + 'Depth', 'Depth')
+#        link_file_node(path + 'Vector', 'Vector')
+#        
+#        bpy.ops.render.render(animation = True)
+#        clear_output_nodes()
