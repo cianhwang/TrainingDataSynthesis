@@ -3,7 +3,7 @@ import random
 from math import radians
 import math
 import sys
-sys.path.append("/Users/qian/Documents/TrainingDataSynthesis")
+sys.path.append("/home/qian/Documents/TrainingDataSynthesis")
 from utils import *
 
 mesh_obj_list = ["plane", "cube", "uv_sphere", "cylinder", "cone", "torus"]
@@ -40,9 +40,9 @@ def set_animation(obj, trans_params, is_background = False):
         obj.keyframe_insert(data_path="scale", index=-1)
     
 def get_rand_trans():
-    location = (random.random() * 4 - 2, 
-                    random.random() * 4 - 2, 
-                    random.random() * 4 - 2)
+    location = (random.random() * 2 - 1, 
+                    random.random() * 2 - 1, 
+                    random.random() * 2 - 1)
     rotation = (random.random() * math.pi * 2, 
                 random.random() * math.pi * 2, 
                 random.random() * math.pi * 2)
@@ -78,10 +78,11 @@ def gen_random_animation(obj_list, patition_len = 7):
 if __name__ == '__main__':
     random.seed("qian038")
     ''' initialize scene '''
-    init_scene(res = (3840, 2160), n_frames = 240, n_samples = 4096, render_region = True, 
+    init_scene(res = (3840, 2160), n_frames = 240, use_gpu = True,
+                n_samples = 10240, render_region = True, 
                 render_params = (1920 - 32, 1920 + 32, 1080 - 32, 1080 + 32))
     
-    n_scenes = 1
+    n_scenes = 30
     
     for scene_idx in range(n_scenes):
         ''' clear scene '''
@@ -91,7 +92,7 @@ if __name__ == '__main__':
         add_light((-3, 0, 7))
 
         ''' set camera '''
-        add_camera((7, -7, 5), (radians(63.6), 0, radians(46.7)))
+        add_camera((7.35889, -6.92579, 4.95831), (radians(63.5593), 0, radians(46.6919)))
         
         ''' add background cube '''
         background = gen_random_obj_with_texture("cube")
@@ -99,7 +100,7 @@ if __name__ == '__main__':
         background.name = "background"
         
         ''' add objs '''
-        n_obj = random.randint(4, 6)
+        n_obj = 3 #random.randint(4, 6)
         obj_list = [background]
         for i in range(n_obj):
             obj_list.append(gen_random_obj_with_texture())
@@ -107,10 +108,10 @@ if __name__ == '__main__':
         gen_random_animation(obj_list, 25)
         
         ''' output '''
-#        path = '/Users/qian/Downloads/blender_collection/scene{:02d}/'.format(scene_idx)
-#        link_file_node(path + 'Image', 'Image')
-#        link_file_node(path + 'Depth', 'Depth')
-#        link_file_node(path + 'Vector', 'Vector')
-#        
-#        bpy.ops.render.render(animation = True)
-#        clear_output_nodes()
+        path = '/home/qian/Downloads/blender_4demosaic/scene{:02d}/'.format(scene_idx)
+        link_file_node(path + 'Image', 'Image')
+        link_file_node(path + 'Depth', 'Depth')
+        link_file_node(path + 'Vector', 'Vector')
+        
+        bpy.ops.render.render(animation = True)
+        clear_output_nodes()
