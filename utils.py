@@ -6,8 +6,8 @@ def init_scene(res = (3840, 2160), n_frames = 240, n_samples = 4096, use_gpu = F
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     scene.cycles.device = 'GPU' if use_gpu else 'CPU'
-    scene.render.tile_x = 64 if use_gpu else 8
-    scene.render.tile_y = 64 if use_gpu else 8
+    scene.render.tile_x = 512 if use_gpu else 8
+    scene.render.tile_y = 512 if use_gpu else 8
     scene.cycles.caustics_reflective = False
     scene.cycles.caustics_refractive = False
     if isinstance(res, int):
@@ -20,7 +20,7 @@ def init_scene(res = (3840, 2160), n_frames = 240, n_samples = 4096, use_gpu = F
     scene.cycles.preview_samples = 1
     scene.cycles.max_bounces = 1
     scene.cycles.sample_clamp_indirect = 0
-    scene.cycles.filter_width = 1.5 ## turn off anti-aliasing
+    scene.cycles.filter_width = 0.7 ## turn off anti-aliasing
     scene.frame_end = n_frames
     if render_region:
         scene.render.use_border = True

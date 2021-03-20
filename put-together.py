@@ -3,7 +3,7 @@ import random
 from math import radians
 import math
 import sys
-sys.path.append("/home/qian/Documents/TrainingDataSynthesis")
+sys.path.append("/Users/qian/Documents/TrainingDataSynthesis")
 from utils import *
 
 mesh_obj_list = ["plane", "cube", "uv_sphere", "cylinder", "cone", "torus"]
@@ -78,11 +78,10 @@ def gen_random_animation(obj_list, patition_len = 7):
 if __name__ == '__main__':
     random.seed("qian038")
     ''' initialize scene '''
-    init_scene(res = (3840, 2160), n_frames = 240, use_gpu = True,
-                n_samples = 10240, render_region = True, 
-                render_params = (1920 - 32, 1920 + 32, 1080 - 32, 1080 + 32))
+    init_scene(res = (512, 512), n_frames = 240, use_gpu = False,
+                n_samples = 4096, render_region = False)
     
-    n_scenes = 30
+    n_scenes = 1
     
     for scene_idx in range(n_scenes):
         ''' clear scene '''
@@ -100,18 +99,19 @@ if __name__ == '__main__':
         background.name = "background"
         
         ''' add objs '''
-        n_obj = 3 #random.randint(4, 6)
+        n_obj = 5#random.randint(10, 20)
         obj_list = [background]
         for i in range(n_obj):
             obj_list.append(gen_random_obj_with_texture())
 
         gen_random_animation(obj_list, 25)
         
-        ''' output '''
-        path = '/home/qian/Downloads/blender_4demosaic/scene{:02d}/'.format(scene_idx)
+        ''' output 
+        path = '/Users/qian/Downloads/blender_4demosaic/scene{:02d}/'.format(scene_idx)
         link_file_node(path + 'Image', 'Image')
         link_file_node(path + 'Depth', 'Depth')
         link_file_node(path + 'Vector', 'Vector')
         
         bpy.ops.render.render(animation = True)
         clear_output_nodes()
+        '''
