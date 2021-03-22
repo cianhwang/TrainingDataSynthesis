@@ -3,7 +3,7 @@ import random
 from math import radians
 import math
 import sys
-sys.path.append("/Users/qian/Documents/TrainingDataSynthesis")
+sys.path.append("/home/qian/Documents/TrainingDataSynthesis")
 from utils import *
 
 mesh_obj_list = ["plane", "cube", "uv_sphere", "cylinder", "cone", "torus"]
@@ -40,9 +40,9 @@ def set_animation(obj, trans_params, is_background = False):
         obj.keyframe_insert(data_path="scale", index=-1)
     
 def get_rand_trans():
-    location = (random.random() * 2 - 1, 
-                    random.random() * 2 - 1, 
-                    random.random() * 2 - 1)
+    location = (random.random() * 4 - 2, 
+                    random.random() * 4 - 2, 
+                    random.random() * 4 - 2)
     rotation = (random.random() * math.pi * 2, 
                 random.random() * math.pi * 2, 
                 random.random() * math.pi * 2)
@@ -78,8 +78,10 @@ def gen_random_animation(obj_list, patition_len = 7):
 if __name__ == '__main__':
     random.seed("qian038")
     ''' initialize scene '''
-    init_scene(res = (512, 512), n_frames = 240, use_gpu = False,
-                n_samples = 4096, render_region = False)
+    init_scene(res = (4096 * 4, 4096 * 4), n_frames = 240, use_gpu = False,
+                n_samples = 20480, render_region = True, 
+                render_params = (4096 * 2 - 128, 4096 * 2  + 128, 
+                                4096 * 2  - 128, 4096 * 2  + 128))
     
     n_scenes = 1
     
@@ -99,19 +101,19 @@ if __name__ == '__main__':
         background.name = "background"
         
         ''' add objs '''
-        n_obj = 5#random.randint(10, 20)
+        n_obj = random.randint(10, 20)
         obj_list = [background]
         for i in range(n_obj):
             obj_list.append(gen_random_obj_with_texture())
 
-        gen_random_animation(obj_list, 25)
+        gen_random_animation(obj_list, 2)
         
-        ''' output 
-        path = '/Users/qian/Downloads/blender_4demosaic/scene{:02d}/'.format(scene_idx)
+        ''' output '''
+        path = '/home/qian/Downloads/blender_256/scene{:04d}/'.format(scene_idx)
         link_file_node(path + 'Image', 'Image')
         link_file_node(path + 'Depth', 'Depth')
         link_file_node(path + 'Vector', 'Vector')
-        
+        scene.frame_end = 1
         bpy.ops.render.render(animation = True)
+        scene.frame_end = 240
         clear_output_nodes()
-        '''
