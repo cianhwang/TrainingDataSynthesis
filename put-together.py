@@ -78,12 +78,12 @@ def gen_random_animation(obj_list, patition_len = 7):
 if __name__ == '__main__':
     random.seed("qian038")
     ''' initialize scene '''
-    init_scene(res = (4096 * 4, 4096 * 4), n_frames = 240, use_gpu = False,
+    init_scene(res = (4096 * 4, 4096 * 4), n_frames = 240, use_gpu = True,
                 n_samples = 20480, render_region = True, 
                 render_params = (4096 * 2 - 128, 4096 * 2  + 128, 
                                 4096 * 2  - 128, 4096 * 2  + 128))
     
-    n_scenes = 1
+    n_scenes = 1000
     
     for scene_idx in range(n_scenes):
         ''' clear scene '''
@@ -111,9 +111,9 @@ if __name__ == '__main__':
         ''' output '''
         path = '/home/qian/Downloads/blender_256/scene{:04d}/'.format(scene_idx)
         link_file_node(path + 'Image', 'Image')
-        link_file_node(path + 'Depth', 'Depth')
-        link_file_node(path + 'Vector', 'Vector')
-        scene.frame_end = 1
+#        link_file_node(path + 'Depth', 'Depth')
+#        link_file_node(path + 'Vector', 'Vector')
+        bpy.context.scene.frame_end = 1
         bpy.ops.render.render(animation = True)
-        scene.frame_end = 240
+        bpy.context.scene.frame_end = 240
         clear_output_nodes()
