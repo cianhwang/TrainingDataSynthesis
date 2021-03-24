@@ -43,9 +43,9 @@ def get_rand_trans():
     location = (random.random() * 4 - 2, 
                     random.random() * 4 - 2, 
                     random.random() * 4 - 2)
-    rotation = (random.random() * math.pi * 2, 
-                random.random() * math.pi * 2, 
-                random.random() * math.pi * 2)
+    rotation = (2 * random.random() * math.pi, 
+                2 * random.random() * math.pi, 
+                2 * random.random() * math.pi)
     scale =    (0.1 + 1.9 * random.random(), 
                 0.1 + 1.9 * random.random(), 
                 0.1 + 1.9 * random.random())
@@ -80,17 +80,17 @@ if __name__ == '__main__':
     ''' initialize scene '''
     init_scene(res = (4096 * 4, 4096 * 4), n_frames = 240, use_gpu = True,
                 n_samples = 20480, render_region = True, 
-                render_params = (4096 * 2 - 128, 4096 * 2  + 128, 
-                                4096 * 2  - 128, 4096 * 2  + 128))
+                render_params = (4096 * 2 - 128, 4096 * 2 + 128, 
+                                4096 * 2 - 128, 4096 * 2 + 128))
     
-    n_scenes = 1000
+    n_scenes = 1
     
     for scene_idx in range(n_scenes):
         ''' clear scene '''
         clear_scene()
 
         ''' add light source '''
-        add_light((-3, 0, 7))
+        add_light((-3, 0, 7), light_type = 'AREA')
 
         ''' set camera '''
         add_camera((7.35889, -6.92579, 4.95831), (radians(63.5593), 0, radians(46.6919)))

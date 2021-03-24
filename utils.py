@@ -44,17 +44,20 @@ def clear_scene(clear_mesh_only = False):
         for ob in data.lights:
             data.lights.remove(data.lights[ob.name], do_unlink = True)
     
-def add_light(loc, energy = 10000):
+def add_light(loc, energy = 10000, light_type = 'POINT'):
     '''
     loc: 3-element tuple
     '''
-    lamp_data = bpy.data.lights.new(name="light", type='POINT')  
+    lamp_data = bpy.data.lights.new(name="light", type=light_type)  
     lamp_object = bpy.data.objects.new(name="light_obj", object_data=lamp_data)  
     bpy.context.collection.objects.link(lamp_object)  
     #lamp_object.location = (-3, 0, 7)
     lamp_object.location = loc
     lamp = bpy.data.lights[lamp_data.name]
     lamp.energy = energy
+    if light_type == 'AREA':
+        lamp.size = 15
+        lamp.cycles.cast_shadow = False
     
 def add_camera(loc, rot, lens = 100):
     '''
