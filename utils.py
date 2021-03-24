@@ -2,7 +2,8 @@ import bpy
 from math import radians
 import random
 
-def init_scene(res = (3840, 2160), n_frames = 240, n_samples = 4096, use_gpu = False, render_region=True, render_params = None, render_tile = 256):
+def init_scene(res = (3840, 2160), n_frames = 240, n_samples = 4096, use_gpu = False, 
+                render_region=True, render_params = None, render_tile = 256):
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     scene.cycles.device = 'GPU' if use_gpu else 'CPU'
@@ -19,6 +20,10 @@ def init_scene(res = (3840, 2160), n_frames = 240, n_samples = 4096, use_gpu = F
     scene.cycles.samples = n_samples
     scene.cycles.preview_samples = 1
     scene.cycles.max_bounces = 1
+    scene.cycles.diffuse_bounces = 0
+    scene.cycles.glossy_bounces = 0
+    scene.cycles.transparent_max_bounces = 0
+    scene.cycles.transmission_bounces = 0
     scene.cycles.sample_clamp_indirect = 0
     scene.cycles.filter_width = 1.5
     scene.frame_end = n_frames
@@ -32,6 +37,20 @@ def init_scene(res = (3840, 2160), n_frames = 240, n_samples = 4096, use_gpu = F
         scene.render.border_max_y = y2/scene.render.resolution_y
     else:
         scene.render.use_border = False
+        
+def init_scene_eevee(res = 512, n_frames = 240):
+    scene = bpy.context.scene
+    scene.render.engine = 'BLENDER_EEVEE'
+    scene.eevee.taa_render_samples = 16
+    scene.eevee.taa_samples = 1
+    scene.eevee.use_taa_reprojection = False
+    if isinstance(res, int):
+        scene.render.resolution_x = res
+        scene.render.resolution_y = res
+    else:
+        scene.render.resolution_x = res[0]
+        scene.render.resolution_y = res[1]
+    scene.frame_end = n_frames
     
 def clear_scene(clear_mesh_only = False):
     data = bpy.data
@@ -55,11 +74,14 @@ def add_light(loc, energy = 10000, light_type = 'POINT'):
     lamp_object.location = loc
     lamp = bpy.data.lights[lamp_data.name]
     lamp.energy = energy
+    lamp.use_shadow = False
     if light_type == 'AREA':
         lamp.size = 15
         lamp.cycles.cast_shadow = False
+        lamp.cycles.use_multiple_importance_sampling = False
+
     
-def add_camera(loc, rot, lens = 100):
+def add_camera(loc, rot, lens = 6400):
     '''
     loc: 3-element tuple
     rot: 3-element tuple in radians
