@@ -82,9 +82,9 @@ if __name__ == '__main__':
 #                n_samples = 1024, render_region = True, 
 #                render_params = (4096 * 2 - 128, 4096 * 2 + 128, 
 #                                4096 * 2 - 128, 4096 * 2 + 128))
-    init_scene_eevee(512, 240)
+    init_scene_eevee(512, 100)
     
-    n_scenes = 1
+    n_scenes = 100
     
     for scene_idx in range(n_scenes):
         ''' clear scene '''
@@ -107,11 +107,11 @@ if __name__ == '__main__':
         for i in range(n_obj):
             obj_list.append(gen_random_obj_with_texture())
 
-        gen_random_animation(obj_list, 2)
+        gen_random_animation(obj_list, 26)
         bpy.context.scene.frame_current = 1
 
         ''' output '''
-        path = '/home/qian/Downloads/blender_speedup/scene{:04d}/'.format(scene_idx)
+        path = '/home/qian/Downloads/blender_512/scene{:04d}/'.format(scene_idx)
         link_file_node(path + 'Image', 'Image')
 #        link_file_node(path + 'Depth', 'Depth')
 #        link_file_node(path + 'Vector', 'Vector')
