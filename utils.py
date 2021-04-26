@@ -81,19 +81,43 @@ def add_light(loc, energy = 10000, light_type = 'POINT'):
         lamp.cycles.use_multiple_importance_sampling = False
 
     
-def add_camera(loc, rot, lens = 6400):
+def add_camera(loc = (0, 0, 0), rot=(0, 0, 0), lens = 6400, name="camera_obj"):
     '''
     loc: 3-element tuple
     rot: 3-element tuple in radians
     '''
     cam_data = bpy.data.cameras.new(name="camera")  
-    cam_ob = bpy.data.objects.new(name="camera_obj", object_data=cam_data)  
+    cam_ob = bpy.data.objects.new(name=name, object_data=cam_data)  
     bpy.context.collection.objects.link(cam_ob)   
     cam_ob.location = loc 
     cam_ob.rotation_euler = rot
     cam = bpy.data.cameras[cam_data.name]  
     cam.lens = lens
     bpy.context.scene.camera = cam_ob
+    return cam_ob
+
+def add_array_cameras(locs = None, fs = None):
+    bpy.ops.object.empty_add()
+    obj = bpy.context.object
+    
+    bpy.context.scene.render.use_multiview = True
+    bpy.context.scene.render.views_format = 'MULTIVIEW'
+    bpy.context.scene.render.views["left"].use = False
+    bpy.context.scene.render.views["right"].use = False
+    
+    if locs is None:
+        locs = [(10, 0, 0),
+                (10, 0, -1), (10, 0, 1),
+                (10, -1, 0), (10, 1, 0)]
+        fs = [64] * len(locs)
+    for i in range(len(locs)):
+        cam = add_camera(locs[i], name = "camera_obj{}".format(i), lens = fs[i])
+        cam.constraints.new("TRACK_TO")
+        cam.constraints["Track To"].target = obj
+        bpy.ops.scene.render_view_add()
+        view_name = "RenderView" if i == 0 else "RenderView.{:03d}".format(i)
+        bpy.context.scene.render.views[view_name].camera_suffix = "_obj{}".format(i)
+    
     
 def add_mesh_obj(type, params = {}, is_modifier = True):
     '''                                                               
@@ -255,10 +279,11 @@ def clear_output_nodes():
 
 if __name__ == "__main__":
 #    random.seed("0038")
-    init_scene()
+    init_scene_eevee(512, 1)
     clear_scene()
     add_light((-3, 0, 7))
-    add_camera((7, -7, 5), (radians(63.6), 0, radians(46.7)))
+    #add_camera((7, -7, 5), (radians(63.6), 0, radians(46.7)))
+    add_array_cameras()
     obj = add_mesh_obj("uv_sphere", {})
     add_modifier(obj, 4)
     mat = add_material(obj)

@@ -3,7 +3,7 @@ import random
 from math import radians
 import math
 import sys
-sys.path.append("/home/qian/Documents/TrainingDataSynthesis")
+sys.path.append("/Users/qian/Documents/TrainingDataSynthesis")
 from utils import *
 
 mesh_obj_list = ["plane", "cube", "uv_sphere", "cylinder", "cone", "torus"]
@@ -82,9 +82,9 @@ if __name__ == '__main__':
 #                n_samples = 1024, render_region = True, 
 #                render_params = (4096 * 2 - 128, 4096 * 2 + 128, 
 #                                4096 * 2 - 128, 4096 * 2 + 128))
-    init_scene_eevee(512, 100)
+    init_scene_eevee(4096, 100)
     
-    n_scenes = 100
+    n_scenes = 1
     
     for scene_idx in range(n_scenes):
         ''' clear scene '''
@@ -94,7 +94,8 @@ if __name__ == '__main__':
         add_light((-3, 0, 7), light_type = 'AREA')
 
         ''' set camera '''
-        add_camera((7.35889, -6.92579, 4.95831), (radians(63.5593), 0, radians(46.6919)))
+        add_array_cameras(locs = [(7.35889, -6.92579, 4.95831), (6, -8, 4.95831)],
+                            fs = [64, 256])
         
         ''' add background cube '''
         background = gen_random_obj_with_texture("cube")
@@ -111,11 +112,11 @@ if __name__ == '__main__':
         bpy.context.scene.frame_current = 1
 
         ''' output '''
-        path = '/home/qian/Downloads/blender_512/scene{:04d}/'.format(scene_idx)
+        path = '/Users/qian/Downloads/blender_parallax/scene{:04d}/'.format(scene_idx)
         link_file_node(path + 'Image', 'Image')
 #        link_file_node(path + 'Depth', 'Depth')
 #        link_file_node(path + 'Vector', 'Vector')
         bpy.context.scene.frame_end = 1
         bpy.ops.render.render(animation = True)
-        bpy.context.scene.frame_end = 240
+#        bpy.context.scene.frame_end = 240
         clear_output_nodes()
