@@ -81,11 +81,14 @@ def add_light(loc, energy = 10000, light_type = 'POINT'):
         lamp.cycles.use_multiple_importance_sampling = False
 
     
-def add_camera(loc = (0, 0, 0), rot=(0, 0, 0), lens = 6400, name="camera_obj"):
+def add_camera(loc = (0, 0, 0), rot=(0, 0, 0), lens = 6400, name="camera_obj", obj = None):
     '''
     loc: 3-element tuple
     rot: 3-element tuple in radians
     '''
+    if obj is None:
+        bpy.ops.object.empty_add()
+        obj = bpy.context.object
     cam_data = bpy.data.cameras.new(name="camera")  
     cam_ob = bpy.data.objects.new(name=name, object_data=cam_data)  
     bpy.context.collection.objects.link(cam_ob)   
@@ -96,11 +99,14 @@ def add_camera(loc = (0, 0, 0), rot=(0, 0, 0), lens = 6400, name="camera_obj"):
     ### modified 04/30/21
     cam.sensor_width = 9
     bpy.context.scene.camera = cam_ob
+    cam.constraints.new("TRACK_TO")
+    cam.constraints["Track To"].target = obj
     return cam_ob
 
-def add_array_cameras(locs = None, fs = None, empty_obj = None):
-    bpy.ops.object.empty_add()
-    obj = bpy.context.object
+def add_array_cameras(locs = None, fs = None, obj = None):
+    if obj is None:
+        bpy.ops.object.empty_add()
+        obj = bpy.context.object
     bpy.context.scene.render.use_multiview = True
     bpy.context.scene.render.views_format = 'MULTIVIEW'
     bpy.context.scene.render.views["left"].use = False
