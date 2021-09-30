@@ -55,7 +55,7 @@ def init_scene_eevee(res = 512, n_frames = 240):
 def clear_scene(clear_mesh_only = False):
     data = bpy.data
     for ob in data.objects:
-        if ob.type == 'MESH':
+        if ob.type == 'MESH' or ob.type == 'EMPTY':
             data.objects.remove(data.objects[ob.name], do_unlink = True)
     if clear_mesh_only is False:
         for ob in data.cameras:
@@ -93,13 +93,14 @@ def add_camera(loc = (0, 0, 0), rot=(0, 0, 0), lens = 6400, name="camera_obj"):
     cam_ob.rotation_euler = rot
     cam = bpy.data.cameras[cam_data.name]  
     cam.lens = lens
+    ### modified 04/30/21
+    cam.sensor_width = 9
     bpy.context.scene.camera = cam_ob
     return cam_ob
 
-def add_array_cameras(locs = None, fs = None):
+def add_array_cameras(locs = None, fs = None, empty_obj = None):
     bpy.ops.object.empty_add()
     obj = bpy.context.object
-    
     bpy.context.scene.render.use_multiview = True
     bpy.context.scene.render.views_format = 'MULTIVIEW'
     bpy.context.scene.render.views["left"].use = False
