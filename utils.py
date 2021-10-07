@@ -63,7 +63,7 @@ def clear_scene(clear_mesh_only = False):
         for ob in data.lights:
             data.lights.remove(data.lights[ob.name], do_unlink = True)
     
-def add_light(loc, energy = 10000, light_type = 'POINT'):
+def add_light(loc, energy = 10000, light_type = 'POINT', light_color=(1.0, 1.0, 1.0)):
     '''
     loc: 3-element tuple
     '''
@@ -74,7 +74,8 @@ def add_light(loc, energy = 10000, light_type = 'POINT'):
     lamp_object.location = loc
     lamp = bpy.data.lights[lamp_data.name]
     lamp.energy = energy
-    lamp.use_shadow = False
+    lamp.color = light_color
+    lamp.use_shadow = True
     if light_type == 'AREA':
         lamp.size = 15
         lamp.cycles.cast_shadow = False
@@ -97,10 +98,10 @@ def add_camera(loc = (0, 0, 0), rot=(0, 0, 0), lens = 6400, name="camera_obj", o
     cam = bpy.data.cameras[cam_data.name]  
     cam.lens = lens
     ### modified 04/30/21
-    cam.sensor_width = 9
+    cam.sensor_width = 36
     bpy.context.scene.camera = cam_ob
-    cam.constraints.new("TRACK_TO")
-    cam.constraints["Track To"].target = obj
+    cam_ob.constraints.new("TRACK_TO")
+    cam_ob.constraints["Track To"].target = obj
     return cam_ob
 
 def add_array_cameras(locs = None, fs = None, obj = None):
@@ -254,7 +255,7 @@ def surface_random_params(type = "ShaderNodeTexMusgrave"):
     return params
 
 def link_file_node(base_path, output_type, 
-                    format = 'OPEN_EXR', color_depth = '16'):
+                    format = 'OPEN_EXR', color_depth = '16', color_mode='RGB'):
     '''                                                                       
     scene: bpy.context.scene                                                  
     base_path: output path to store image files                               
@@ -273,6 +274,7 @@ def link_file_node(base_path, output_type,
     file_node = nodes.new("CompositorNodeOutputFile")
     file_node.base_path = base_path
     file_node.format.file_format = format
+    file_node.format.color_mode = color_mode
     file_node.format.color_depth = color_depth
     scene.node_tree.links.new(render_layers.outputs[output_type],
                             file_node.inputs['Image'])
@@ -283,13 +285,18 @@ def clear_output_nodes():
     for node in nodes:
         if 'File Output' in node.name:
             nodes.remove(node)
+    if bpy.context.scene.render.use_multiview:
+        views = bpy.context.scene.render.views
+        for view in views:
+            if 'RenderView' in view.name:
+                views.remove(view)
 
 if __name__ == "__main__":
-#    random.seed("0038")
-    init_scene_eevee(512, 1)
+    random.seed("0038")
+    init_scene_eevee(512, 2)
     clear_scene()
     add_light((-3, 0, 7))
-    #add_camera((7, -7, 5), (radians(63.6), 0, radians(46.7)))
+#    add_camera((7, -7, 5), (radians(63.6), 0, radians(46.7)), 64)
     add_array_cameras()
     obj = add_mesh_obj("uv_sphere", {})
     add_modifier(obj, 4)
@@ -298,6 +305,7 @@ if __name__ == "__main__":
                         tex_random_params("ShaderNodeTexChecker"))
     displace_surface(obj, mat, "ShaderNodeTexMusgrave",
                         surface_random_params("ShaderNodeTexMusgrave"))
-    link_file_node('./', 'Image')
-    link_file_node('./', 'Depth')
+    link_file_node('/home/qian/Desktop/test/Image/', 'Image', 'PNG', '8', 'BW')
+    link_file_node('/home/qian/Desktop/test/Depth/', 'Depth')
+    bpy.ops.render.render(animation = False)
     clear_output_nodes()
