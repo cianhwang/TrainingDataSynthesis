@@ -38,7 +38,7 @@ def init_scene(res = (3840, 2160), n_frames = 240, n_samples = 4096, use_gpu = F
     else:
         scene.render.use_border = False
         
-def init_scene_eevee(res = 512, n_frames = 240):
+def init_scene_eevee(res = 512, n_frames = 240, anti_aliasing=True, color_correction=False):
     scene = bpy.context.scene
     scene.render.engine = 'BLENDER_EEVEE'
     scene.eevee.taa_render_samples = 16
@@ -51,6 +51,11 @@ def init_scene_eevee(res = 512, n_frames = 240):
         scene.render.resolution_x = res[0]
         scene.render.resolution_y = res[1]
     scene.frame_end = n_frames
+    if not anti_aliasing:
+        scene.render.filter_size = 0
+    if not color_correction:
+        scene.display_settings.display_device = 'None'
+        scene.sequencer_colorspace_settings.name = 'Linear'
     
 def clear_scene(clear_mesh_only = False):
     data = bpy.data
@@ -62,6 +67,56 @@ def clear_scene(clear_mesh_only = False):
             data.cameras.remove(data.cameras[ob.name], do_unlink = True)
         for ob in data.lights:
             data.lights.remove(data.lights[ob.name], do_unlink = True)
+
+def wavelength_to_rgb(wavelength, gamma=1):
+
+    '''This converts a given wavelength of light to an 
+    approximate RGB color value. The wavelength must be given
+    in nanometers in the range from 380 nm through 750 nm
+    (789 THz through 400 THz).
+
+    Based on code by Dan Bruton
+    http://www.physics.sfasu.edu/astro/color/spectra.html
+    http://www.noah.org/wiki/Wavelength_to_RGB_in_Python
+    '''
+    if isinstance(wavelength, str):
+        if wavelength == 'white':
+            return 1.0, 1.0, 1.0
+        else:
+            raise NotImplementedError("color not implemented")
+
+    wavelength = float(wavelength)
+    if wavelength >= 380 and wavelength <= 440:
+        attenuation = 0.3 + 0.7 * (wavelength - 380) / (440 - 380)
+        R = ((-(wavelength - 440) / (440 - 380)) * attenuation) ** gamma
+        G = 0.0
+        B = (1.0 * attenuation) ** gamma
+    elif wavelength >= 440 and wavelength <= 490:
+        R = 0.0
+        G = ((wavelength - 440) / (490 - 440)) ** gamma
+        B = 1.0
+    elif wavelength >= 490 and wavelength <= 510:
+        R = 0.0
+        G = 1.0
+        B = (-(wavelength - 510) / (510 - 490)) ** gamma
+    elif wavelength >= 510 and wavelength <= 580:
+        R = ((wavelength - 510) / (580 - 510)) ** gamma
+        G = 1.0
+        B = 0.0
+    elif wavelength >= 580 and wavelength <= 645:
+        R = 1.0
+        G = (-(wavelength - 645) / (645 - 580)) ** gamma
+        B = 0.0
+    elif wavelength >= 645 and wavelength <= 750:
+        attenuation = 0.3 + 0.7 * (750 - wavelength) / (750 - 645)
+        R = (1.0 * attenuation) ** gamma
+        G = 0.0
+        B = 0.0
+    else:
+        R = 0.0
+        G = 0.0
+        B = 0.0
+    return R, G, B
     
 def add_light(loc, energy = 10000, light_type = 'POINT', light_color=(1.0, 1.0, 1.0)):
     '''
@@ -80,6 +135,7 @@ def add_light(loc, energy = 10000, light_type = 'POINT', light_color=(1.0, 1.0, 
         lamp.size = 15
         lamp.cycles.cast_shadow = False
         lamp.cycles.use_multiple_importance_sampling = False
+    return lamp
 
     
 def add_camera(loc = (0, 0, 0), rot=(0, 0, 0), lens = 6400, name="camera_obj", obj = None):
@@ -279,13 +335,15 @@ def link_file_node(base_path, output_type,
     scene.node_tree.links.new(render_layers.outputs[output_type],
                             file_node.inputs['Image'])
                             
-def clear_output_nodes():
+def clear_output_nodes(use_multiview=None):
     scene = bpy.context.scene
     nodes = scene.node_tree.nodes
     for node in nodes:
         if 'File Output' in node.name:
             nodes.remove(node)
-    if bpy.context.scene.render.use_multiview:
+    if use_multiview is None:
+        use_multiview=bpy.context.scene.render.use_multiview
+    if use_multiview:
         views = bpy.context.scene.render.views
         for view in views:
             if 'RenderView' in view.name:
@@ -293,7 +351,7 @@ def clear_output_nodes():
 
 if __name__ == "__main__":
     random.seed("0038")
-    init_scene_eevee(512, 2)
+    init_scene_eevee(512, 2, anti_aliasing=False, color_correction=False)
     clear_scene()
     add_light((-3, 0, 7))
 #    add_camera((7, -7, 5), (radians(63.6), 0, radians(46.7)), 64)
