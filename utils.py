@@ -1,6 +1,10 @@
 import bpy
 from math import radians
 import random
+import math
+
+def rand():
+    return random.random()*2-1
 
 def init_scene(res = (3840, 2160), n_frames = 240, n_samples = 4096, use_gpu = False, 
                 render_region=True, render_params = None, render_tile = 256):
@@ -15,10 +19,11 @@ def init_scene(res = (3840, 2160), n_frames = 240, n_samples = 4096, use_gpu = F
     else:
         scene.render.resolution_x = res[0]
         scene.render.resolution_y = res[1]
-    scene.render.tile_x = render_tile if use_gpu else 8
-    scene.render.tile_y = render_tile if use_gpu else 8
+#    scene.render.tile_x = render_tile if use_gpu else 8
+#    scene.render.tile_y = render_tile if use_gpu else 8
     scene.cycles.samples = n_samples
-    scene.cycles.preview_samples = 1
+    scene.cycles.preview_samples = 1024
+    scene.cycles.use_preview_denoising = True
     scene.cycles.max_bounces = 1
     scene.cycles.diffuse_bounces = 0
     scene.cycles.glossy_bounces = 0
@@ -26,15 +31,18 @@ def init_scene(res = (3840, 2160), n_frames = 240, n_samples = 4096, use_gpu = F
     scene.cycles.transmission_bounces = 0
     scene.cycles.sample_clamp_indirect = 0
     scene.cycles.filter_width = 1.5
+    scene.cycles.use_denoising = True
+    scene.cycles.denoiser = 'OPTIX'
+    #scene.cycles.adaptive_threshold = 0.001
     scene.frame_end = n_frames
     if render_region:
         scene.render.use_border = True
         scene.render.use_crop_to_border = True
-        x1, x2, y1, y2 = render_params
-        scene.render.border_min_x = x1/scene.render.resolution_x
-        scene.render.border_max_x = x2/scene.render.resolution_x
-        scene.render.border_min_y = y1/scene.render.resolution_y
-        scene.render.border_max_y = y2/scene.render.resolution_y
+        #x1, x2, y1, y2 = render_params
+        #scene.render.border_min_x = x1/scene.render.resolution_x
+        #scene.render.border_max_x = x2/scene.render.resolution_x
+        #scene.render.border_min_y = y1/scene.render.resolution_y
+        #scene.render.border_max_y = y2/scene.render.resolution_y
     else:
         scene.render.use_border = False
         
@@ -118,7 +126,7 @@ def wavelength_to_rgb(wavelength, gamma=1):
         B = 0.0
     return R, G, B
     
-def add_light(loc, energy = 10000, light_type = 'POINT', light_color=(1.0, 1.0, 1.0)):
+def add_light(loc, energy = 10000, light_type = 'POINT', light_color=(1.0, 1.0, 1.0), size = 15, size_y = 15):
     '''
     loc: 3-element tuple
     '''
@@ -132,18 +140,19 @@ def add_light(loc, energy = 10000, light_type = 'POINT', light_color=(1.0, 1.0, 
     lamp.color = light_color
     lamp.use_shadow = True
     if light_type == 'AREA':
-        lamp.size = 15
-        lamp.cycles.cast_shadow = False
-        lamp.cycles.use_multiple_importance_sampling = False
+        lamp.size = size
+        lamp.size_y = size_y
+        #lamp.cycles.cast_shadow = False
+        #lamp.cycles.use_multiple_importance_sampling = False
     return lamp
 
     
-def add_camera(loc = (0, 0, 0), rot=(0, 0, 0), lens = 6400, name="camera_obj", obj = None):
+def add_camera(loc = (0, 0, 0), rot=(0, 0, 0), lens = 6400, name="camera_obj", obj = None, sensor_width = 36, track_to = True):
     '''
     loc: 3-element tuple
     rot: 3-element tuple in radians
     '''
-    if obj is None:
+    if obj is None and track_to:
         bpy.ops.object.empty_add()
         obj = bpy.context.object
     cam_data = bpy.data.cameras.new(name="camera")  
@@ -151,17 +160,19 @@ def add_camera(loc = (0, 0, 0), rot=(0, 0, 0), lens = 6400, name="camera_obj", o
     bpy.context.collection.objects.link(cam_ob)   
     cam_ob.location = loc 
     cam_ob.rotation_euler = rot
+    cam_ob.scale = (0.2, 0.2, 0.2)
     cam = bpy.data.cameras[cam_data.name]  
     cam.lens = lens
     ### modified 04/30/21
-    cam.sensor_width = 36
+    cam.sensor_width = sensor_width
     bpy.context.scene.camera = cam_ob
-    cam_ob.constraints.new("TRACK_TO")
-    cam_ob.constraints["Track To"].target = obj
+    if track_to:
+        cam_ob.constraints.new("TRACK_TO")
+        cam_ob.constraints["Track To"].target = obj
     return cam_ob
 
-def add_array_cameras(locs = None, fs = None, obj = None):
-    if obj is None:
+def add_array_cameras(locs = None, rots = None, fs = None, obj = None, sensor_widths=None, track_to=True):
+    if obj is None and track_to:
         bpy.ops.object.empty_add()
         obj = bpy.context.object
     bpy.context.scene.render.use_multiview = True
@@ -173,11 +184,14 @@ def add_array_cameras(locs = None, fs = None, obj = None):
         locs = [(10, 0, 0),
                 (10, 0, -1), (10, 0, 1),
                 (10, -1, 0), (10, 1, 0)]
+        rots = [(math.pi/2, 0, 0)] * len(locs)
         fs = [64] * len(locs)
+        sensor_widths = [36] * len(locs)
     for i in range(len(locs)):
-        cam = add_camera(locs[i], name = "camera_obj{}".format(i), lens = fs[i])
-        cam.constraints.new("TRACK_TO")
-        cam.constraints["Track To"].target = obj
+        cam = add_camera(locs[i], rots[i], name = "camera_obj{}".format(i), lens = fs[i], sensor_width = sensor_widths[i], track_to = track_to)
+        if track_to:
+            cam.constraints.new("TRACK_TO")
+            cam.constraints["Track To"].target = obj
         bpy.ops.scene.render_view_add()
         view_name = "RenderView" if i == 0 else "RenderView.{:03d}".format(i)
         bpy.context.scene.render.views[view_name].camera_suffix = "_obj{}".format(i)
@@ -203,6 +217,17 @@ def add_mesh_obj(type, params = {}, is_modifier = True):
     else:
         raise NotImplementedError
     obj = bpy.context.object
+    return obj
+
+def set_rand_pos(obj):
+    sy = random.random()*1
+    ly = sy + 1 + random.random()*8.5
+    sx, sz = random.random()*(ly-sy)*0.15, random.random()*(ly-sy)*0.15
+    lx, lz = rand()*(ly-sy)*0.25, rand()*(ly-sy)*0.2
+    rx, ry, rz = rand()*math.pi/10, rand()*math.pi, rand()*math.pi/10
+    obj.location = (lx, ly, lz)
+    obj.scale = (sx, sy, sz)
+    obj.rotation_euler = (rx, ry, rz)
     return obj
 
 def add_modifier(obj, level = 2):
@@ -235,7 +260,7 @@ def add_texture(obj, mat, type, params = None):
     if type == "ShaderNodeTexVoronoi":
         tex.voronoi_dimensions = '4D'
     if type == "ShaderNodeTexMagic":
-        tex.turbulence_depth = random.randint(1, 5)
+        tex.turbulence_depth = random.randint(1, 3)
     if params is not None:
         for name in params:
             tex.inputs[name].default_value = params[name]
@@ -248,19 +273,19 @@ def add_texture(obj, mat, type, params = None):
 def tex_random_params(type):
     params = {}
     if type == "ShaderNodeTexVoronoi":
-        params['Scale'] = 10 + 20 * random.random()
+        params['Scale'] = 4 + 10 * random.random()
         params['W'] = random.randint(-100, 100) * 0.2
     elif type == "ShaderNodeTexMagic":
-        params['Scale'] = 10 + 20 * random.random()
-        params['Distortion'] = 0.5 + 2.5 * random.random()
+        params['Scale'] = 0.2 + random.random() if random.random() > 0.5 else -0.2 - random.random()
+        params['Distortion'] = 2 + 3 * random.random()
     elif type == "ShaderNodeTexBrick":
-        params['Scale'] = 10 + 20 * random.random()
+        params['Scale'] = 2 + 3 * random.random()
         params['Color1'] = (random.random(),random.random(),random.random(),1)
         params['Color2'] = (random.random(),random.random(),random.random(),1)
         params['Mortar'] = (random.random(),random.random(),random.random(),1)
         params['Mortar Size'] = random.random() * 0.1
     elif type == "ShaderNodeTexChecker":
-        params['Scale'] = 40 + 20 * random.random()
+        params['Scale'] = 5+ 10* random.random()
         params['Color1'] = (random.random(),random.random(),random.random(),1)
         params['Color2'] = (random.random(),random.random(),random.random(),1)
     else:
@@ -272,7 +297,7 @@ def displace_surface(obj, mat, type = "ShaderNodeTexMusgrave",
     matnodes = mat.node_tree.nodes
     dispnode = matnodes.new("ShaderNodeDisplacement")
     if disp_method == "BOTH":
-        dispnode.inputs["Scale"].default_value = 0.3 * random.random()
+        dispnode.inputs["Scale"].default_value = 0.3+random.random()
     disp = matnodes['Material Output'].inputs['Displacement']
     mat.node_tree.links.new(disp, dispnode.outputs['Displacement'])
 
@@ -298,14 +323,14 @@ def surface_random_params(type = "ShaderNodeTexMusgrave"):
     params = {}
     if type == "ShaderNodeTexNoise":
         params['W'] = random.randint(-100, 100) * 0.2
-        params['Scale'] = 10 + 20 * random.random()
-        params['Detail'] = 1 + 2 * random.random()
-        params['Distortion'] = -5 + 10 * random.random()
+        params['Scale'] = 1 + 2* random.random()
+        params['Detail'] = 1 +  random.random()
+        params['Distortion'] = -2 + 4* random.random()
     elif type == "ShaderNodeTexMusgrave":
         params['W'] = random.randint(-100, 100) * 0.2
-        params['Scale'] = 10 + 20 * random.random()
+        params['Scale'] = 1.5 + 1.5* random.random()
         params['Detail'] = 1 + 2 * random.random()
-        params['Lacunarity'] = 5 * random.random()
+        params['Lacunarity'] = 1 + 4* random.random()
     else:
         raise NotImplementedError
     return params
